@@ -12,7 +12,7 @@ function [Xc,Z]= airPLS(X,lambda,order,wep,p,itermax)
 %         Z: the fitted vector (size m*n)
 %  Examples:
 %         Xc=airPLS(X);
-%         [Xc,Z]=airPLS(X,10e5,2,0.1,0.5,20);
+%         [Xc,Z]=airPLS(X,10e9,2,0.1,0.5,20);
 %  Reference:
 %         (1) Eilers, P. H. C., A perfect smoother. Analytical Chemistry 75 (14), 3631 (2003).
 %         (2) Eilers, P. H. C., Baseline Correction with Asymmetric Least
@@ -21,6 +21,7 @@ function [Xc,Z]= airPLS(X,lambda,order,wep,p,itermax)
 % 
 %  zhimin zhang @ central south university on Mar 30,2011
 
+h = waitbar(0, 'begin...'); % progressbar
 if nargin < 6
     itermax=20;
   if nargin < 5
@@ -45,6 +46,7 @@ wi = [1:ceil(n*wep) floor(n-n*wep):n];
 D = diff(speye(n), order);
 DD = lambda*D'*D;
 for i=1:m
+    waitbar(i/m, h, strcat('airPLS: Processing (', num2str(round(100*i/m)), '%)')); % progressbar
     w=ones(n,1);
     x=X(i,:);
     for j=1:itermax
@@ -58,8 +60,9 @@ for i=1:m
         end
         w(d>=0) = 0;
         w(wi)   = p;
-        w(d<0)  = exp(j*abs(d(d<0))/dssn);
+        w(d<0)  = j*exp(abs(d(d<0))/dssn);
     end
     Z(i,:)=z;
 end
 Xc=X-Z;
+delete(h); % progressbar
